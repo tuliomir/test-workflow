@@ -4,15 +4,20 @@ on:
   push:
     tags:
       - t*
+    branches:
+      - test-branch
 
 jobs:
   test_version:
     runs-on: ubuntu-latest
-    steps:
+    outputs:
+      release_status_output: ${{ steps.release_version.outputs.version_status_output }}
+      release_status_env: ${{ steps.release_version.outputs.version_status_env }}
 
+    steps:
       # Check if this version is a valid public release
       - name: Check release version
-        id: check_release_version
+        id: release_version
         shell: bash
         run: |
           ref="${{ github.ref }}"
@@ -22,19 +27,97 @@ jobs:
           
           # This patterns accepts "v1.0.0" , "v2.4.6". Rejects "v1.0.0-rc1".
           if [[ "$version" =~ ^t[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-          result=isRelease
+            result=isRelease
           else
-          result=isNotRelease
+            result=isNotRelease
           fi
           else
-          result=isNotTag
+            result=isNotTag
           fi
           
           echo $result
-          echo "{version_status1}={result}" >> $GITHUB_OUTPUT
-          echo "{version_status2}={result}" >> $GITHUB_ENV
+          echo "version_status_output=$result" >> $GITHUB_OUTPUT
+          echo "version_status_env=$result" >> $GITHUB_ENV
 
       - name: Show the results
+        env:
+          FROM_OUTPUT: ${{ steps.release_version.outputs.version_status_output }}
+          FROM_ENV: ${{ env.version_status_env }}
         run: |
-          echo From env: {{ env.version_status2 }}
-          echo From outputs: {{ outputs.check_release_version.version_status2 }}
+          echo Testing results
+          echo FROM_OUTPUT "$FROM_OUTPUT"
+          echo FROM_ENV "$FROM_ENV"
+          echo steps.release_version.outputs.version_status_output "${{ steps.release_version.outputs.version_status_output }}"
+          echo env.version_status_env "${{ env.version_status_env }}"
+
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+      - name: Dump job context
+        env:
+          JOB_CONTEXT: ${{ toJson(job) }}
+        run: echo "$JOB_CONTEXT"
+      - name: Dump steps context
+        env:
+          STEPS_CONTEXT: ${{ toJson(steps) }}
+        run: echo "$STEPS_CONTEXT"
+      - name: Dump runner context
+        env:
+          RUNNER_CONTEXT: ${{ toJson(runner) }}
+        run: echo "$RUNNER_CONTEXT"
+      - name: Dump strategy context
+        env:
+          STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+        run: echo "$STRATEGY_CONTEXT"
+      - name: Dump matrix context
+        env:
+          MATRIX_CONTEXT: ${{ toJson(matrix) }}
+        run: echo "$MATRIX_CONTEXT"
+
+  jobAlways:
+    runs-on: ubuntu-latest
+    needs: test_version
+    steps:
+      - env:
+          OUTPUT1: ${{needs.test_version.outputs.release_status_output}}
+          OUTPUT2: ${{github.env.release_status_env}}
+        run:
+          echo output "$OUTPUT1"
+          echo env "$OUTPUT2"
+
+  jobRelease:
+    runs-on: ubuntu-latest
+    needs: test_version
+    if: ${{ needs.test_version.outputs.release_status_output == 'isRelease' }}
+    steps:
+      - env:
+          OUTPUT1: ${{needs.test_version.outputs.release_status_output}}
+          OUTPUT2: ${{github.env.release_status_env}}
+        run:
+          echo output "$OUTPUT1"
+          echo env "$OUTPUT2"
+
+  jobNotRelease:
+    runs-on: ubuntu-latest
+    needs: test_version
+    if: ${{needs.test_version.outputs.release_status_output == 'isNotRelease' }}
+    steps:
+      - env:
+          OUTPUT1: ${{needs.test_version.outputs.release_status_output}}
+          OUTPUT2: ${{github.env.release_status_env}}
+        run:
+          echo output "$OUTPUT1"
+          echo env "$OUTPUT2"
+
+  jobNotTag:
+    runs-on: ubuntu-latest
+    needs: test_version
+    if: ${{needs.test_version.outputs.release_status_output == 'isNotTag' }}
+    steps:
+      - env:
+          OUTPUT1: ${{needs.test_version.outputs.release_status_output}}
+          OUTPUT2: ${{github.env.release_status_env}}
+        run:
+          echo output "$OUTPUT1"
+          echo env "$OUTPUT2"
