@@ -34,8 +34,8 @@ jobs:
           fi
           
           echo $result
-          echo "{version_status_output}={result}" >> $GITHUB_OUTPUT
-          echo "{version_status_env}={result}" >> $GITHUB_ENV
+          echo "version_status_output=$result" >> $GITHUB_OUTPUT
+          echo "version_status_env=$result" >> $GITHUB_ENV
 
       - name: Show the results
         env:
