@@ -1,0 +1,40 @@
+name: Validate Git Tag
+
+on:
+  push:
+    tags:
+      - t*
+
+jobs:
+  test_version:
+    runs-on: ubuntu-latest
+    steps:
+
+      # Check if this version is a valid public release
+      - name: Check release version
+        id: check_release_version
+        shell: bash
+        run: |
+          ref="${{ github.ref }}"
+          
+          if [[ "$ref" = refs/tags/* ]]; then
+          version="${ref#refs/tags/}"
+          
+          # This patterns accepts "v1.0.0" , "v2.4.6". Rejects "v1.0.0-rc1".
+          if [[ "$version" =~ ^t[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          result=isRelease
+          else
+          result=isNotRelease
+          fi
+          else
+          result=isNotTag
+          fi
+          
+          echo $result
+          echo "{version_status1}={result}" >> $GITHUB_OUTPUT
+          echo "{version_status2}={result}" >> $GITHUB_ENV
+
+      - name: Show the results
+        run: |
+          echo From env: {{ env.version_status2 }}
+          echo From outputs: {{ outputs.check_release_version.version_status2 }}
