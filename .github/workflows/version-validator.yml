@@ -81,7 +81,7 @@ jobs:
     steps:
       - env:
           OUTPUT1: ${{needs.test_version.outputs.release_status_output}}
-          OUTPUT2: ${{github.release_status_env}}
+          OUTPUT2: ${{github.env.release_status_env}}
         run:
           echo output "$OUTPUT1"
           echo env "$OUTPUT2"
@@ -93,7 +93,7 @@ jobs:
     steps:
       - env:
           OUTPUT1: ${{needs.test_version.outputs.release_status_output}}
-          OUTPUT2: ${{github.release_status_env}}
+          OUTPUT2: ${{github.env.release_status_env}}
         run:
           echo output "$OUTPUT1"
           echo env "$OUTPUT2"
@@ -105,7 +105,7 @@ jobs:
     steps:
       - env:
           OUTPUT1: ${{needs.test_version.outputs.release_status_output}}
-          OUTPUT2: ${{github.release_status_env}}
+          OUTPUT2: ${{github.env.release_status_env}}
         run:
           echo output "$OUTPUT1"
           echo env "$OUTPUT2"
@@ -117,7 +117,7 @@ jobs:
     steps:
       - env:
           OUTPUT1: ${{needs.test_version.outputs.release_status_output}}
-          OUTPUT2: ${{github.release_status_env}}
+          OUTPUT2: ${{github.env.release_status_env}}
         run:
           echo output "$OUTPUT1"
           echo env "$OUTPUT2"
