@@ -8,11 +8,13 @@ on:
 jobs:
   test_version:
     runs-on: ubuntu-latest
-    steps:
+    outputs:
+      release_status: ${{ steps.release_version.outputs.version_status1 }}
 
+    steps:
       # Check if this version is a valid public release
       - name: Check release version
-        id: check_release_version
+        id: release_version
         shell: bash
         run: |
           ref="${{ github.ref }}"
@@ -22,12 +24,12 @@ jobs:
           
           # This patterns accepts "v1.0.0" , "v2.4.6". Rejects "v1.0.0-rc1".
           if [[ "$version" =~ ^t[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-          result=isRelease
+            result=isRelease
           else
-          result=isNotRelease
+            result=isNotRelease
           fi
           else
-          result=isNotTag
+            result=isNotTag
           fi
           
           echo $result
@@ -35,9 +37,11 @@ jobs:
           echo "{version_status2}={result}" >> $GITHUB_ENV
 
       - name: Show the results
+        env:
+          FROM_OUTPUT: ${{ steps.release_version.outputs.version_status1 }}
+          FROM_ENV: ${{ env.version_status2 }}
         run: |
           echo Testing results
-          echo From env: {{ env.version_status2 }}
-          echo From outputs: {{ outputs.check_release_version.version_status1 }}
-          echo From outputs steps: ${{ steps.check_release_version.outputs.version_status1 }}
+          echo "$FROM_OUTPUT - $FROM_ENV"
+          
 
